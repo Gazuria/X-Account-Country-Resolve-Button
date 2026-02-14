@@ -4,6 +4,10 @@
 // @version      1.0
 // @description  Adds a country flag to Twitter/X users based on their "Account based in" location.
 // @author       Gazu and Antigravity
+// @homepage     https://github.com/Gazuria/X-Account-Country-Resolve-Button
+// @supportURL   https://github.com/Gazuria/X-Account-Country-Resolve-Button/issues
+// @updateURL    https://raw.githubusercontent.com/Gazuria/X-Account-Country-Resolve-Button/main/TwitterCountryFlag.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gazuria/X-Account-Country-Resolve-Button/main/TwitterCountryFlag.user.js
 // @match        https://twitter.com/*
 // @match        https://x.com/*
 // @grant        GM_xmlhttpRequest
