@@ -2,6 +2,8 @@
 
 Adds a country flag next to usernames on X (Twitter) based on the user's **"Account based in"** location.
 
+![click](https://github.com/user-attachments/assets/d184f59a-e9a2-4348-99e5-636c9746ebbd)
+
 Works with:
 - Tampermonkey
 - Greasemonkey
