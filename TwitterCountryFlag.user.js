@@ -143,9 +143,9 @@
         const note = userNotes.get(screenName);
 
         if (note) {
-            noteSpan.textContent = ` [${getVisibleNoteText(note)}]`;
+            noteSpan.textContent = `# ${getVisibleNoteText(note)}`;
             noteSpan.title = note;
-            noteSpan.style.display = '';
+            noteSpan.style.display = 'inline-flex';
         } else {
             noteSpan.textContent = '';
             noteSpan.title = '';
@@ -231,25 +231,47 @@
 
         const noteSpan = document.createElement('span');
         noteSpan.dataset.twitterUserNoteScreenName = screenName;
-        noteSpan.style.marginLeft = '4px';
+        noteSpan.style.marginLeft = '6px';
+        noteSpan.style.padding = '1px 7px';
+        noteSpan.style.border = '1px solid rgba(29, 155, 240, 0.35)';
+        noteSpan.style.borderRadius = '9999px';
+        noteSpan.style.background = 'rgba(29, 155, 240, 0.12)';
         noteSpan.style.color = 'rgb(29, 155, 240)';
-        noteSpan.style.fontSize = '0.95em';
+        noteSpan.style.fontSize = '0.86em';
         noteSpan.style.fontWeight = '600';
+        noteSpan.style.lineHeight = '1.35';
+        noteSpan.style.alignItems = 'center';
+        noteSpan.style.maxWidth = '190px';
+        noteSpan.style.overflow = 'hidden';
+        noteSpan.style.textOverflow = 'ellipsis';
         noteSpan.style.whiteSpace = 'nowrap';
+        noteSpan.style.verticalAlign = 'middle';
         updateNoteDisplay(noteSpan, screenName);
 
         const noteButton = document.createElement('button');
         noteButton.type = 'button';
-        noteButton.textContent = ' ✎';
+        noteButton.textContent = '✎';
         noteButton.title = 'Agregar o editar comentario privado';
-        noteButton.style.marginLeft = '2px';
-        noteButton.style.padding = '0';
+        noteButton.style.marginLeft = '4px';
+        noteButton.style.padding = '1px 5px';
         noteButton.style.border = '0';
+        noteButton.style.borderRadius = '9999px';
         noteButton.style.background = 'transparent';
         noteButton.style.color = 'rgb(113, 118, 123)';
         noteButton.style.cursor = 'pointer';
         noteButton.style.font = 'inherit';
         noteButton.style.lineHeight = '1';
+        noteButton.style.verticalAlign = 'middle';
+
+        noteButton.onmouseenter = () => {
+            noteButton.style.background = 'rgba(29, 155, 240, 0.12)';
+            noteButton.style.color = 'rgb(29, 155, 240)';
+        };
+
+        noteButton.onmouseleave = () => {
+            noteButton.style.background = 'transparent';
+            noteButton.style.color = 'rgb(113, 118, 123)';
+        };
 
         noteButton.onclick = (e) => {
             e.preventDefault();
@@ -315,7 +337,7 @@
             for (const mutation of mutations) {
                 for (const node of mutation.addedNodes) {
                     if (node.nodeType === 1) {
-                        // Look for user names. 
+                        // Look for user names.
                         // The selector `div[data-testid="User-Name"]` contains name and handle.
                         // Inside, we usually want the handle part or the name part.
                         // Let's target the User-Name container.
