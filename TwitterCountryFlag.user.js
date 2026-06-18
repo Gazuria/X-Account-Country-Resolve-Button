@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         X Country Flag Button
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Adds a country flag to Twitter/X users based on their "Account based in" location.
-// @author       Gazu and Antigravity
+// @author       Gazu and Codex
 // @homepage     https://github.com/Gazuria/X-Account-Country-Resolve-Button
 // @supportURL   https://github.com/Gazuria/X-Account-Country-Resolve-Button/issues
 // @updateURL    https://raw.githubusercontent.com/Gazuria/X-Account-Country-Resolve-Button/main/TwitterCountryFlag.user.js
@@ -21,7 +21,9 @@
     'use strict';
 
     const QUERY_ID = 'zs_jFPFT78rBpXv9Z3U2YQ'; // From Data.txt
-    const CACHE_duration = 24 * 60 * 60 * 1000 * 100; // 2400 hours
+    const CACHE_duration = 24 * 60 * 60 * 1000; // 24 hours
+    const NOTE_PREFIX = 'user-note:';
+    const MAX_VISIBLE_NOTE_LENGTH = 48;
 
     // Comprehensive Country to Flag Mapping
     const countryFlags = {
@@ -116,6 +118,49 @@
         }
     };
 
+    const userNotes = {
+        get: (screenName) => {
+            return GM_getValue(`${NOTE_PREFIX}${screenName.toLowerCase()}`, '');
+        },
+        set: (screenName, note) => {
+            const key = `${NOTE_PREFIX}${screenName.toLowerCase()}`;
+            const trimmedNote = note.trim();
+
+            if (trimmedNote) {
+                GM_setValue(key, trimmedNote);
+            } else {
+                GM_setValue(key, '');
+            }
+        }
+    };
+
+    function getVisibleNoteText(note) {
+        if (note.length <= MAX_VISIBLE_NOTE_LENGTH) return note;
+        return `${note.slice(0, MAX_VISIBLE_NOTE_LENGTH - 1)}…`;
+    }
+
+    function updateNoteDisplay(noteSpan, screenName) {
+        const note = userNotes.get(screenName);
+
+        if (note) {
+            noteSpan.textContent = ` [${getVisibleNoteText(note)}]`;
+            noteSpan.title = note;
+            noteSpan.style.display = '';
+        } else {
+            noteSpan.textContent = '';
+            noteSpan.title = '';
+            noteSpan.style.display = 'none';
+        }
+    }
+
+    function refreshVisibleNotes(screenName) {
+        document.querySelectorAll('[data-twitter-user-note-screen-name]').forEach((noteSpan) => {
+            if (noteSpan.dataset.twitterUserNoteScreenName.toLowerCase() === screenName.toLowerCase()) {
+                updateNoteDisplay(noteSpan, screenName);
+            }
+        });
+    }
+
     // API Call
     async function fetchUserLocation(screenName) {
         // Check cache first
@@ -170,7 +215,7 @@
         const href = link.getAttribute('href');
         if (!href || !href.startsWith('/')) return;
 
-        const screenName = href.replace('/', '');
+        const screenName = href.replace(/^\//, '').split(/[/?#]/)[0];
         if (['home', 'explore', 'notifications', 'messages', 'i'].includes(screenName)) return;
 
         // Mark as processing
@@ -183,6 +228,40 @@
         flagSpan.style.marginLeft = '4px';
         flagSpan.style.fontSize = '1.1em';
         flagSpan.style.cursor = 'pointer';
+
+        const noteSpan = document.createElement('span');
+        noteSpan.dataset.twitterUserNoteScreenName = screenName;
+        noteSpan.style.marginLeft = '4px';
+        noteSpan.style.color = 'rgb(29, 155, 240)';
+        noteSpan.style.fontSize = '0.95em';
+        noteSpan.style.fontWeight = '600';
+        noteSpan.style.whiteSpace = 'nowrap';
+        updateNoteDisplay(noteSpan, screenName);
+
+        const noteButton = document.createElement('button');
+        noteButton.type = 'button';
+        noteButton.textContent = ' ✎';
+        noteButton.title = 'Agregar o editar comentario privado';
+        noteButton.style.marginLeft = '2px';
+        noteButton.style.padding = '0';
+        noteButton.style.border = '0';
+        noteButton.style.background = 'transparent';
+        noteButton.style.color = 'rgb(113, 118, 123)';
+        noteButton.style.cursor = 'pointer';
+        noteButton.style.font = 'inherit';
+        noteButton.style.lineHeight = '1';
+
+        noteButton.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const currentNote = userNotes.get(screenName);
+            const nextNote = prompt(`Comentario privado para @${screenName}. Dejalo vacio para borrar:`, currentNote);
+            if (nextNote === null) return;
+
+            userNotes.set(screenName, nextNote);
+            refreshVisibleNotes(screenName);
+        };
 
         const injectFlag = (countryName) => {
             if (countryName && countryFlags[countryName]) {
@@ -219,8 +298,12 @@
         const handleSpan = element.querySelector('div[dir="ltr"] > span');
         if (handleSpan) {
             handleSpan.appendChild(flagSpan);
+            handleSpan.appendChild(noteSpan);
+            handleSpan.appendChild(noteButton);
         } else {
             element.appendChild(flagSpan);
+            element.appendChild(noteSpan);
+            element.appendChild(noteButton);
         }
     }
 
@@ -232,7 +315,7 @@
             for (const mutation of mutations) {
                 for (const node of mutation.addedNodes) {
                     if (node.nodeType === 1) {
-                        // Look for user names.
+                        // Look for user names. 
                         // The selector `div[data-testid="User-Name"]` contains name and handle.
                         // Inside, we usually want the handle part or the name part.
                         // Let's target the User-Name container.
